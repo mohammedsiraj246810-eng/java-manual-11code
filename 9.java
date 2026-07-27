@@ -1,81 +1,111 @@
 import java.sql.*;
 
-public class Main {
-
-    static final String URL = "jdbc:mysql://localhost:3306/college";
-    static final String USER = "root";
-    static final String PASSWORD = "root";   // Change if needed
+public class StudentJDBC {
 
     public static void main(String[] args) {
 
+        String url = "jdbc:mysql://localhost:3306/college";
+        String user = "root";
+        String password = "1234"; // Change to your MySQL password
+
         try {
+
+            // Load Driver
             Class.forName("com.mysql.cj.jdbc.Driver");
 
-            Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+            // Connect Database
+            Connection con = DriverManager.getConnection(url, user, password);
 
-            // Insert Records
-            String insert = "INSERT INTO student VALUES(?,?,?,?)";
-            PreparedStatement ps = con.prepareStatement(insert);
+            System.out.println("Database Connected Successfully.");
 
-            ps.setInt(1, 101);
-            ps.setString(2, "Rahul");
-            ps.setString(3, "CSE");
-            ps.setInt(4, 90);
-            ps.executeUpdate();
+            // INSERT
+            String insertQuery = "INSERT INTO student(roll_no,name,department,marks) VALUES(?,?,?,?)";
 
-            ps.setInt(1, 102);
-            ps.setString(2, "Sneha");
-            ps.setString(3, "ISE");
-            ps.setInt(4, 91);
-            ps.executeUpdate();
+            PreparedStatement insert = con.prepareStatement(insertQuery);
+
+            insert.setInt(1, 101);
+            insert.setString(2, "Rahul");
+            insert.setString(3, "CSE");
+            insert.setInt(4, 90);
+            insert.executeUpdate();
+
+            insert.setInt(1, 102);
+            insert.setString(2, "Sneha");
+            insert.setString(3, "ISE");
+            insert.setInt(4, 91);
+            insert.executeUpdate();
 
             System.out.println("Records Inserted Successfully.");
 
-            // Update
-            String update = "UPDATE student SET marks=? WHERE rollno=?";
-            ps = con.prepareStatement(update);
-            ps.setInt(1, 95);
-            ps.setInt(2, 101);
-            ps.executeUpdate();
+            // SEARCH
+            String searchQuery = "SELECT * FROM student WHERE roll_no=?";
+            PreparedStatement search = con.prepareStatement(searchQuery);
 
-            System.out.println("Record Updated Successfully.");
+            search.setInt(1, 101);
 
-            // Search
-            String search = "SELECT * FROM student WHERE rollno=?";
-            ps = con.prepareStatement(search);
-            ps.setInt(1, 101);
+            ResultSet rs = search.executeQuery();
 
-            ResultSet rs = ps.executeQuery();
-
-            System.out.println("\nStudent Details");
-            while (rs.next()) {
-                System.out.println("Roll No : " + rs.getInt("rollno"));
+            if (rs.next()) {
+                System.out.println("\nStudent Details");
+                System.out.println("Roll No : " + rs.getInt("roll_no"));
                 System.out.println("Name : " + rs.getString("name"));
                 System.out.println("Department : " + rs.getString("department"));
                 System.out.println("Marks : " + rs.getInt("marks"));
             }
 
-            // Display All Records
-            Statement st = con.createStatement();
-            rs = st.executeQuery("SELECT * FROM student");
+            rs.close();
 
-            System.out.println("\nStudent Records");
-            System.out.println("--------------------------------------");
-            System.out.println("Roll\tName\tDepartment\tMarks");
-            System.out.println("--------------------------------------");
+            // UPDATE
+            String updateQuery = "UPDATE student SET marks=? WHERE roll_no=?";
+            PreparedStatement update = con.prepareStatement(updateQuery);
 
-            while (rs.next()) {
-                System.out.println(
-                        rs.getInt("rollno") + "\t" +
-                        rs.getString("name") + "\t" +
-                        rs.getString("department") + "\t\t" +
-                        rs.getInt("marks"));
+            update.setInt(1, 95);
+            update.setInt(2, 101);
+
+            int rows = update.executeUpdate();
+
+            if (rows > 0) {
+                System.out.println("\nRecord Updated Successfully.");
             }
 
+            // DISPLAY
+            String displayQuery = "SELECT * FROM student";
+            PreparedStatement display = con.prepareStatement(displayQuery);
+
+            ResultSet result = display.executeQuery();
+
+            System.out.println("\n------------------------------");
+            System.out.println("Roll\tName\tDepartment\tMarks");
+            System.out.println("------------------------------");
+
+            while (result.next()) {
+
+                System.out.println(
+                        result.getInt("roll_no") + "\t"
+                                + result.getString("name") + "\t"
+                                + result.getString("department") + "\t\t"
+                                + result.getInt("marks"));
+            }
+
+            result.close();
+
+            insert.close();
+            search.close();
+            update.close();
+            display.close();
             con.close();
 
-        } catch (Exception e) {
-            System.out.println(e);
+            System.out.println("\nDatabase Connection Closed.");
+
+        } catch (ClassNotFoundException e) {
+
+            System.out.println("JDBC Driver Not Found.");
+            e.printStackTrace();
+
+        } catch (SQLException e) {
+
+            System.out.println("Database Error.");
+            e.printStackTrace();
         }
     }
 }
